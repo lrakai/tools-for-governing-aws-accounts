@@ -59,9 +59,7 @@
                                                 [
                                                     {
                                                         "Fn::GetAtt": [
-                                                            {
-                                                                "Ref": "Bucket"
-                                                            },
+                                                            "Bucket",
                                                             "Arn"
                                                         ]
                                                     },
@@ -87,9 +85,7 @@
                                     ],
                                     "Resource": {
                                         "Fn::GetAtt": [
-                                            {
-                                                "Ref": "Bucket"
-                                            },
+                                            "Bucket",
                                             "Arn"
                                         ]
                                     }
@@ -105,7 +101,7 @@
                         }
                     }
                 ],
-                "RoleName": "config-role-us-west-2"
+                "RoleName": "config-role"
             }
         },
         "Group": {
@@ -136,21 +132,9 @@
                                 {
                                     "Effect": "Allow",
                                     "Action": [
-                                        "iam:CreateServiceLinkedRole",
                                         "iam:PassRole"
                                     ],
-                                    "Resource": {
-                                        "Fn::Join": [
-                                            "",
-                                            [
-                                                "arn:aws:iam::",
-                                                {
-                                                    "Ref": "AWS::AccountId"
-                                                },
-                                                ":role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig"
-                                            ]
-                                        ]
-                                    }
+                                    "Resource": "arn:aws:iam::*:role/config-role"
                                 },
                                 {
                                     "Action": [
