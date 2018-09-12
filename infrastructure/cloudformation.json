@@ -22,6 +22,92 @@
         "Topic": {
             "Type": "AWS::SNS::Topic"
         },
+        "ConfigRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "config.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Path": "/",
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
+                ],
+                "Policies": [
+                    {
+                        "PolicyName": "config",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:PutObject*"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Join": [
+                                                "",
+                                                [
+                                                    {
+                                                        "Fn::GetAtt": [
+                                                            {
+                                                                "Ref": "Bucket"
+                                                            },
+                                                            "Arn"
+                                                        ]
+                                                    },
+                                                    "/AWSLogs/",
+                                                    {
+                                                        "Ref": "AWS::AccountId"
+                                                    },
+                                                    "/*"
+                                                ]
+                                            ]
+                                        }
+                                    ],
+                                    "Condition": {
+                                        "StringLike": {
+                                            "s3:x-amz-acl": "bucket-owner-full-control"
+                                        }
+                                    }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:GetBucketAcl"
+                                    ],
+                                    "Resource": {
+                                        "Fn::GetAtt": [
+                                            {
+                                                "Ref": "Bucket"
+                                            },
+                                            "Arn"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "sns:Publish",
+                                    "Resource": {
+                                        "Ref": "Topic"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "RoleName": "config-role-us-west-2"
+            }
+        },
         "Group": {
             "Type": "AWS::IAM::Group",
             "Properties": {
@@ -39,10 +125,6 @@
                                         "iam:GenerateCredentialReport",
                                         "iam:List*",
                                         "iam:Get*",
-                                        "iam:CreateRole",
-                                        "iam:CreatePolicy",
-                                        "iam:AttachRolePolicy",
-                                        "iam:PassRole",
                                         "config:*",
                                         "cloudtrail:*",
                                         "cloudwatch:*",
@@ -50,6 +132,25 @@
                                         "s3:*"
                                     ],
                                     "Resource": "*"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "iam:CreateServiceLinkedRole",
+                                        "iam:PassRole"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Join": [
+                                            "",
+                                            [
+                                                "arn:aws:iam::",
+                                                {
+                                                    "Ref": "AWS::AccountId"
+                                                },
+                                                ":role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig"
+                                            ]
+                                        ]
+                                    }
                                 },
                                 {
                                     "Action": [
